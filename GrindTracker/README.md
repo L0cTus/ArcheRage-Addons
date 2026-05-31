@@ -1,5 +1,7 @@
 # GrindTracker
 
+![alt text](https://github.com/L0cTus/ArcheRage-Addons/blob/main/GrindTracker/screenshot.png?raw=true)
+
 A lightweight, no-fuss farming / grinding session tracker.
 
 Start a session, kill mobs, and watch the live stats roll in. Everything is
