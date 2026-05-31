@@ -31,7 +31,7 @@ ADDON:ImportAPI(API_TYPE.UNIT.id)
 ADDON:ImportAPI(API_TYPE.ITEM.id)
 
 local ADDON_NAME = "GrindTracker"
-local VERSION    = "1.1.1"
+local VERSION    = "1.1.2"
 
 -- =========================
 -- Settings (editable knobs)
@@ -252,6 +252,7 @@ local function MakeLabel(parent, id, text, x, y, w, h, size, align, color)
     t.style:SetColor(c[1], c[2], c[3], 1)
     t.style:SetOutline(true)
     t.style:SetShadow(true)
+    if t.style.SetEllipsis then t.style:SetEllipsis(true) end
     t:SetText(text or "")
     EnablePickSafe(t, false)
     return t
@@ -353,8 +354,8 @@ end)
 -- The total column is right-aligned at a fixed column edge; the /h column is
 -- left-aligned starting just to the right of it.
 local LABEL_X      = 14
-local TOTAL_RIGHT  = 170   -- right edge of the total column
-local HOURLY_X     = 200   -- left edge of the /h column
+local TOTAL_RIGHT  = 180   -- right edge of the total column
+local HOURLY_X     = 192   -- left edge of the /h column
 local function makeColLabel(parent, id, anchorSide, x, yy, w, color, align)
     local lbl = parent:CreateChildWidget("label", id, 0, false)
     SetExtentSafe(lbl, w, ROW_H)
@@ -425,7 +426,7 @@ ShowSafe(win, savedMainVisible and true or false)
 -- =========================
 -- Separate Loot window
 -- =========================
-local LOOT_W = 300
+local LOOT_W = 340
 
 -- Load saved position / visibility for the loot window.
 local savedLootX, savedLootY, savedLootVisible = LoadPanel("loot")
@@ -445,13 +446,22 @@ end)
 
 local ly = 36
 
--- Loot row pool
+-- Loot rows: name takes the left ~75%, count takes a fixed 60px on the right
+-- with a clean 12px gap between them. SetEllipsis(true) clips long names with "..."
+-- (set inside MakeLabel via style:SetEllipsis).
+local NAME_X     = 18
+local COUNT_W    = 60
+local COUNT_PAD  = 14   -- right margin
+local GAP        = 12   -- space between name end and count start
+local COUNT_X    = LOOT_W - COUNT_PAD - COUNT_W   -- left edge of count column
+local NAME_W     = COUNT_X - GAP - NAME_X         -- name fills everything to its left
+
 for i = 1, MAX_LOOT_ROWS do
-    lootNameLbls[i]  = MakeLabel(lootWin, "lw_n_" .. i, "", 18, ly, LOOT_W - 90, LOOT_RH, 14, ALIGN_LEFT, { 0.9, 0.9, 0.9 })
-    lootCountLbls[i] = MakeLabel(lootWin, "lw_c_" .. i, "", LOOT_W - 76, ly, 60, LOOT_RH, 14, ALIGN_RIGHT, C_GOLD)
+    lootNameLbls[i]  = MakeLabel(lootWin, "lw_n_" .. i, "", NAME_X,  ly, NAME_W,  LOOT_RH, 14, ALIGN_LEFT,  { 0.9, 0.9, 0.9 })
+    lootCountLbls[i] = MakeLabel(lootWin, "lw_c_" .. i, "", COUNT_X, ly, COUNT_W, LOOT_RH, 14, ALIGN_RIGHT, C_GOLD)
     ly = ly + LOOT_RH
 end
-lootMoreLbl = MakeLabel(lootWin, "lw_more", "", 18, ly, LOOT_W - 36, LOOT_RH, 13, ALIGN_LEFT, { 0.7, 0.7, 0.7 })
+lootMoreLbl = MakeLabel(lootWin, "lw_more", "", NAME_X, ly, LOOT_W - NAME_X - COUNT_PAD, LOOT_RH, 13, ALIGN_LEFT, { 0.7, 0.7, 0.7 })
 ly = ly + LOOT_RH + 12
 
 SetExtentSafe(lootWin, LOOT_W, ly)
