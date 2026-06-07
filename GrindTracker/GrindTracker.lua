@@ -1,4 +1,4 @@
--- GrindTracker.lua
+-- GrindTracker.lua (Release v1.1.0)
 -- A lightweight grind / farming session tracker for ArcheAge (x2 addon API).
 -- Made by: Loctus & AI
 --
@@ -33,7 +33,7 @@ ADDON:ImportAPI(API_TYPE.AUCTION.id)
 ADDON:ImportAPI(API_TYPE.MAP.id)
 
 local ADDON_NAME = "GrindTracker"
-local VERSION    = "1.2.1"
+local VERSION    = "1.2.2"
 
 -- =========================
 -- Settings (editable knobs)
@@ -62,13 +62,13 @@ local C_XP    = { 0.55, 0.80, 1.00 }
 local C_HDR   = { 0.95, 0.85, 0.55 }
 local C_HONOR = { 0.80, 0.55, 1.00 }
 
--- Honor granted per gem on loot. Values confirmed from in-game tooltips.
--- Edit names/values if your server uses different tiers.
-local ITEM_HONOR = {
-    ["Faint Honor Gem"]     =  50,
-    ["Dim Honor Gem"]       = 100,
-    ["Vivid Honor Gem"]     = 200,
-    ["Brilliant Honor Gem"] = 500,
+-- Honor gem lookup by item type ID (language-independent).
+-- IDs sourced from the ArcheRage wiki item database.
+-- Add/edit entries here if your server has different gems.
+local HONOR_BY_ID = {
+    [44501] = 50,    -- Faint Honor Gem
+    [44503] = 100,   -- Dimmed Honor Gem
+    [44504] = 200,   -- Vivid Honor Gem
 }
 
 -- =========================
@@ -216,7 +216,7 @@ local S = {
     xp        = 0,
     coin      = 0,
     deaths    = 0,
-    honor     = 0,    -- honor from ITEM_HONOR gem drops
+    honor     = 0,    -- honor from honor gem drops
     note      = "",
     zone      = "",
     mainZone  = "",
@@ -1635,9 +1635,12 @@ SafePcall("ItemHook", function()
         S.lootCount[name] = S.lootCount[name] + cnt
         S.lootTotal = S.lootTotal + cnt
 
-        -- Honor gems: add to session honor total.
-        local honorPer = ITEM_HONOR[name]
-        if honorPer then S.honor = S.honor + honorPer * cnt end
+        -- Honor gems: ID-based lookup.
+        local itemId = tonumber(itemLink and itemLink:match("|i(%d+)") or "")
+        local honorPer = itemId and HONOR_BY_ID[itemId]
+        if honorPer then
+            S.honor = S.honor + honorPer * cnt
+        end
 
         -- Remember itemType/grade so we can look up AH price.
         if info and info.itemType and not S.lootMeta[name] then
